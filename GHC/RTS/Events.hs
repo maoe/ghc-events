@@ -77,8 +77,8 @@ import Data.Function hiding (id)
 import Data.List
 import Data.Maybe (fromMaybe, fromJust)
 import Data.Monoid ((<>))
+import Data.Vector ((!))
 import Text.Printf
-import Data.Array
 import Prelude hiding (gcd, rem, id)
 
 import GHC.RTS.EventParserUtils

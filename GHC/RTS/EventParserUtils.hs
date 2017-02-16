@@ -13,7 +13,6 @@ module GHC.RTS.EventParserUtils (
     ) where
 
 import Control.Monad
-import Data.Array
 import Data.Binary
 import Data.Binary.Get ()
 import qualified Data.Binary.Get as G
@@ -22,13 +21,15 @@ import Data.Char
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as M
 import Data.List
+import Data.Vector (Vector)
+import qualified Data.Vector as V
 
 #define EVENTLOG_CONSTANTS_ONLY
 #include "EventLogFormat.h"
 
 import GHC.RTS.EventTypes
 
-newtype EventParsers = EventParsers (Array Int (Get EventInfo))
+newtype EventParsers = EventParsers (Vector (Get EventInfo))
 
 nBytes :: Integral a => a -> Get [Word8]
 nBytes n = replicateM (fromIntegral n) get
@@ -103,10 +104,9 @@ simpleEvent t p = FixedSizeParser t 0 (return p)
 
 mkEventTypeParsers :: IntMap EventType
                    -> [EventParser EventInfo]
-                   -> Array Int (Get EventInfo)
+                   -> Vector (Get EventInfo)
 mkEventTypeParsers etypes event_parsers
- = accumArray (flip const) undefined (0, max_event_num)
-    [ (num, parser num) | num <- [0..max_event_num] ]
+ = V.fromList [parser num | num <- [0..max_event_num]]
   where
     max_event_num = maximum (M.keys etypes)
     undeclared_etype num = fail ("undeclared event type: " ++ show num)
