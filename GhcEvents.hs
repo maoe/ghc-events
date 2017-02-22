@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP #-}
-
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE DataKinds #-}
 module Main where
 
 import GHC.RTS.Events
@@ -9,12 +10,19 @@ import GHC.RTS.Events.Analysis
 import GHC.RTS.Events.Analysis.SparkThread
 import GHC.RTS.Events.Analysis.Thread
 import GHC.RTS.Events.Analysis.Capability
+import GHC.RTS.Events.Analysis.Timing
 
+import Data.Foldable (for_)
+import Control.Monad
 import System.Environment (getArgs)
 import Data.Either (rights)
 import qualified Data.Map as M
+import qualified Data.IntMap.Strict as IntMap
+import Data.TDigest (TDigest)
+import qualified Data.TDigest as TDigest
 import System.IO
 import System.Exit
+import Data.Time.Clock
 
 main :: IO ()
 main = getArgs >>= command
@@ -171,7 +179,49 @@ command ["profile", "sparks", file] = do
                    evTime evts
     putStrLn . showProcess $ result
 
+command ["gc", "pause", file] = do
+    eventLog <- readLogOrDie file
+    let evts = events $ dat eventLog
+    case validate (durationMachine isStartGC isEndGC) evts of
+      Left _ -> return ()
+      Right stats -> void $ IntMap.traverseWithKey f stats
+    where
+      f capNo (_, stat) = do
+        putStrLn $ "cap #" ++ show capNo
+        mapM_ print
+          [ ( q
+            , picosecondsToDiffTime . round . (1000 *)
+              <$> TDigest.quantile @100 q stat
+            )
+          | q <- [0.5, 0.9, 0.99, 0.999]
+          ]
+
+command ["gc", "interval", file] = do
+    eventLog <- readLogOrDie file
+    let evts = events $ dat eventLog
+    case validate (intervalMachine isStartGC) evts of
+      Left _ -> return ()
+      Right stats -> void $ IntMap.traverseWithKey f stats
+    where
+      f capNo (_, stat) = do
+        putStrLn $ "cap #" ++ show capNo
+        mapM_ print $
+          [ ( q
+            , picosecondsToDiffTime . round . (1000 *)
+              <$> TDigest.quantile @100 q stat
+            )
+          | q <- [0.5, 0.9, 0.99, 0.999]
+          ]
+
 command _ = putStr usage >> die "Unrecognized command"
+
+isStartGC :: EventInfo -> Bool
+isStartGC StartGC {} = True
+isStartGC _ = False
+
+isEndGC :: EventInfo -> Bool
+isEndGC EndGC {} = True
+isEndGC _ = False
 
 readLogOrDie :: FilePath -> IO EventLog
 readLogOrDie file = do

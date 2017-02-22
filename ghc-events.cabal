@@ -68,6 +68,7 @@ library
                     binary     >= 0.7 && < 0.10,
                     bytestring >= 0.10.4,
                     array      >= 0.2 && < 0.6,
+                    tdigest    < 0.2,
                     text       >= 0.11.2.3 && < 1.3,
                     vector     >= 0.7 && < 0.13
   exposed-modules:  GHC.RTS.Events,
@@ -77,6 +78,7 @@ library
                     GHC.RTS.Events.Analysis.Capability
                     GHC.RTS.Events.Analysis.SparkThread
                     GHC.RTS.Events.Analysis.Thread
+                    GHC.RTS.Events.Analysis.Timing
   other-modules:    GHC.RTS.EventParserUtils,
                     GHC.RTS.EventTypes
                     GHC.RTS.Events.Binary
@@ -88,7 +90,7 @@ library
 
 executable ghc-events
   main-is:          GhcEvents.hs
-  build-depends:    ghc-events, base, containers
+  build-depends:    ghc-events, base, containers, tdigest, time
   extensions:	    RecordWildCards, NamedFieldPuns, BangPatterns, PatternGuards
 
 test-suite test-versions
