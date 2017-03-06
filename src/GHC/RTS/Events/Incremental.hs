@@ -12,14 +12,19 @@ module GHC.RTS.Events.Incremental
   , readEvents
   , readEventLog
 
-  -- * Legacy API
+  -- * IO interface
   , readEventLogFromFile
+  , printEventsIncremental
+  , hPrintEventsIncremental
   ) where
 import Control.Monad
+import Data.Monoid
 import Data.Word
+import System.IO
 
 import qualified Data.Binary.Get as G
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Internal as BL
 import qualified Data.IntMap.Strict as IM
@@ -120,6 +125,22 @@ readEventLog bytes = do
 
 readEventLogFromFile :: FilePath -> IO (Either String EventLog)
 readEventLogFromFile path = readEventLog <$> BL.readFile path
+
+printEventsIncremental :: FilePath -> IO ()
+printEventsIncremental path = withFile path ReadMode hPrintEventsIncremental
+
+hPrintEventsIncremental :: Handle -> IO ()
+hPrintEventsIncremental hdl = go decodeEventLog
+  where
+    go decoder = case decoder of
+      Produce event decoder' -> do
+        BB.hPutBuilder stdout $ buildEvent event <> "\n"
+        go decoder'
+      Consume k -> do
+        chunk <- B.hGetSome hdl 4096
+        unless (B.null chunk) $ go $ k chunk
+      Done {} -> return ()
+      Error _ err -> fail err
 
 -- | Makes a decoder with all the required parsers when given a Header
 mkEventDecoder :: Header -> G.Decoder (Maybe Event)
