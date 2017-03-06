@@ -4,6 +4,7 @@ module Main where
 
 import GHC.RTS.Events
 import GHC.RTS.EventsIncremental
+import qualified GHC.RTS.Events.Incremental as Inc
 import GHC.RTS.Events.Merge
 import GHC.RTS.Events.Analysis
 import GHC.RTS.Events.Analysis.SparkThread
@@ -22,10 +23,7 @@ main = getArgs >>= command
 command :: [String] -> IO ()
 command ["--help"] = putStr usage
 
-command ["inc", file] = do
-    h <- openBinaryFile file ReadMode
-    eh <- ehOpen h 4096
-    printEventsIncremental eh False
+command ["inc", file] = Inc.printEventsIncremental file
 
 command ["inc", "force", file] = do
     h <- openBinaryFile file ReadMode
