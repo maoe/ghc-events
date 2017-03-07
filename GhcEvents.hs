@@ -179,7 +179,7 @@ command _ = putStr usage >> die "Unrecognized command"
 
 readLogOrDie :: FilePath -> IO EventLog
 readLogOrDie file = do
-    e <- readEventLogFromFile file
+    e <- Inc.readEventLogFromFile file
     case e of
         Left s    -> die ("Failed to parse " ++ file ++ ": " ++ s)
         Right evtLog -> return evtLog
