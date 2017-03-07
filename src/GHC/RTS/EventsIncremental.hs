@@ -188,7 +188,7 @@ ehOpen handle sz = do
   return EH { ehHandle = handle, ehChunkSize = sz, ehState = ioref }
 
 -- | Reads at most one event from the EventHandle. It is intended called
--- repeadetly, returning one event at a time. 
+-- repeadetly, returning one event at a time.
 ehReadEvent :: EventHandle -> IO (ParseResult Event)
 ehReadEvent (EH handle chunkSize stateRef) = do
   state <- readIORef stateRef
