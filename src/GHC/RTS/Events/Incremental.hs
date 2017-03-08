@@ -18,6 +18,8 @@ module GHC.RTS.Events.Incremental
   , hPrintEventsIncremental
   ) where
 import Control.Monad
+import Data.Either
+import Data.Maybe
 import Data.Monoid
 import Data.Word
 import System.IO
@@ -105,9 +107,13 @@ readHeader = go $ Left decodeHeader
         Error _ err -> fail err
       Right header -> Right (header, bytes)
 
-readEvents :: Header -> BL.ByteString -> Either String [Event]
-readEvents header = sequenceA . go (decodeEvents header)
+readEvents :: Header -> BL.ByteString -> ([Event], Maybe String)
+readEvents header = f . go (decodeEvents header)
   where
+    f :: [Either e a] -> ([a], Maybe e)
+    f xs = (rights rs, listToMaybe (lefts ls))
+      where
+        (rs, ls) = break isLeft xs
     go :: Decoder Event -> BL.ByteString -> [Either String Event]
     go decoder bytes = case decoder of
       Produce event decoder' -> Right event : go decoder' bytes
@@ -117,14 +123,14 @@ readEvents header = sequenceA . go (decodeEvents header)
       Done {} -> []
       Error _ err -> [Left err]
 
-readEventLog :: BL.ByteString -> Either String EventLog
+readEventLog :: BL.ByteString -> Either String (EventLog, Maybe String)
 readEventLog bytes = do
   (header, bytes') <- readHeader bytes
-  events <- readEvents header bytes'
-  return $ EventLog header $ Data events
+  case readEvents header bytes' of
+    (events, err) -> return (EventLog header $ Data events, err)
 
 readEventLogFromFile :: FilePath -> IO (Either String EventLog)
-readEventLogFromFile path = readEventLog <$> BL.readFile path
+readEventLogFromFile path = fmap fst . readEventLog <$> BL.readFile path
 
 printEventsIncremental :: FilePath -> IO ()
 printEventsIncremental path = withFile path ReadMode hPrintEventsIncremental
