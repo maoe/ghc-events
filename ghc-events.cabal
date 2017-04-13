@@ -87,4 +87,3 @@ test-suite write-merge
   hs-source-dirs:   ., test
   build-depends:    ghc-events, base, bytestring
   extensions:	    RecordWildCards, NamedFieldPuns, BangPatterns, PatternGuards
-  buildable:        False
