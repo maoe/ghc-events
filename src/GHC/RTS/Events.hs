@@ -528,7 +528,7 @@ ppEventType = TL.unpack . TB.toLazyText . buildEventType
 buildEventType :: EventType -> TB.Builder
 buildEventType (EventType num dsc msz) =
   TB.decimal num <> ": "
-  <> TB.fromString dsc <> " (size "
+  <> TB.fromText dsc <> " (size "
   <> maybe "variable" TB.decimal msz <> ")"
 
 -- | Pretty prints an 'Event', with clean handling for 'UnknownEvent'
@@ -542,7 +542,7 @@ buildEvent imap Event {..} =
   <> maybe "" (\c -> "cap " <> TB.decimal c <> ": ") evCap
   <> case evSpec of
     UnknownEvent{ ref=ref } ->
-      maybe "" (TB.fromString . desc) $ IM.lookup (fromIntegral ref) imap
+      maybe "" (TB.fromText . desc) $ IM.lookup (fromIntegral ref) imap
     _ -> buildEventInfo evSpec
 
 buildEvent' :: Event -> TB.Builder

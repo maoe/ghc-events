@@ -10,10 +10,10 @@ import qualified Data.Vector.Unboxed as VU
 -- EventType.
 type EventTypeNum = Word16
 type EventTypeDescLen = Word32
-type EventTypeDesc = String
+type EventTypeDesc = Text
 type EventTypeSize = Word16
 -- Event.
-type EventDescription = String
+type EventDescription = Text
 type Timestamp = Word64
 type ThreadId = Word32
 type CapNo = Word16

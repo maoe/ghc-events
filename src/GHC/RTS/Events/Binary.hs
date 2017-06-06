@@ -62,8 +62,12 @@ getEventType = do
               fail "Event Type end marker not found."
            return (EventType etNum etDesc etSize)
            where
-             getEtDesc :: Int -> Get [Char]
-             getEtDesc s = replicateM s (get :: Get Char)
+             getEtDesc :: Int -> Get EventTypeDesc
+             getEtDesc n = do
+               chunk <- G.getByteString n
+               case TE.decodeUtf8' chunk of
+                 Left err -> fail $ show err
+                 Right txt -> return txt
 
 getHeader :: Get Header
 getHeader = do
@@ -840,12 +844,13 @@ putHeader (Header ets) = do
     putMarker EVENT_HET_END
     putMarker EVENT_HEADER_END
  where
-    putEventType (EventType n d msz) = do
+    putEventType (EventType n desc msz) = do
         putMarker EVENT_ET_BEGIN
         putType n
         putE $ fromMaybe 0xffff msz
-        putE (fromIntegral $ length d :: EventTypeDescLen)
-        mapM_ put d
+        let chunk = TE.encodeUtf8 desc
+        putE (fromIntegral (B.length chunk) :: EventTypeDescLen)
+        put chunk
         -- the event type header allows for extra data, which we don't use:
         putE (0 :: Word32)
         putMarker EVENT_ET_END
