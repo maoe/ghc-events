@@ -282,9 +282,9 @@ data EventInfo
                        }
 
   -- messages
-  | Message            { msg :: String }
-  | UserMessage        { msg :: String }
-  | UserMarker         { markername :: String }
+  | Message            { msg :: Text }
+  | UserMessage        { msg :: Text }
+  | UserMarker         { markername :: Text }
 
   -- Events emitted by a parallel RTS
    -- Program /process info (tools might prefer newer variants above)

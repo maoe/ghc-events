@@ -254,19 +254,19 @@ standardParsers = [
   )),
 
  (VariableSizeParser EVENT_LOG_MSG (do -- (msg)
-      num <- get :: Get Word16
-      string <- getString num
-      return Message{ msg = string }
+      messageLen <- get :: Get Word16
+      msg <- getTextLen $ fromIntegral messageLen
+      return Message{ msg }
    )),
  (VariableSizeParser EVENT_USER_MSG (do -- (msg)
-      num <- get :: Get Word16
-      string <- getString num
-      return UserMessage{ msg = string }
+      messageLen <- get :: Get Word16
+      msg <- getTextLen $ fromIntegral messageLen
+      return UserMessage{ msg }
    )),
-    (VariableSizeParser EVENT_USER_MARKER (do -- (markername)
-      num <- get :: Get Word16
-      string <- getString num
-      return UserMarker{ markername = string }
+ (VariableSizeParser EVENT_USER_MARKER (do -- (markername)
+      markerLen <- get :: Get Word16
+      markername <- getTextLen $ fromIntegral markerLen
+      return UserMarker{ markername }
    )),
  (VariableSizeParser EVENT_PROGRAM_ARGS (do -- (capset, [arg])
       num <- get :: Get Word16
@@ -1192,16 +1192,16 @@ putEventSpec (WallClockTime cs sec nsec) = do
     putE nsec
 
 putEventSpec (Message s) = do
-    putE (fromIntegral (length s) :: Word16)
-    mapM_ putE s
+    putE (fromIntegral (textByteLen s) :: Word16)
+    put s
 
 putEventSpec (UserMessage s) = do
-    putE (fromIntegral (length s) :: Word16)
-    mapM_ putE s
+    putE (fromIntegral (textByteLen s) :: Word16)
+    put s
 
 putEventSpec (UserMarker s) = do
-    putE (fromIntegral (length s) :: Word16)
-    mapM_ putE s
+    putE (fromIntegral (textByteLen s) :: Word16)
+    put s
 
 putEventSpec (UnknownEvent {}) = error "putEventSpec UnknownEvent"
 
@@ -1370,3 +1370,10 @@ getText = do
   case TLE.decodeUtf8' chunks of
     Left err -> fail $ show err
     Right text -> return $ TL.toStrict text
+
+getTextLen :: Int -> Get T.Text
+getTextLen n = do
+  chunk <- G.getByteString n
+  case TE.decodeUtf8' chunk of
+    Left err -> fail $ show err
+    Right text -> return text

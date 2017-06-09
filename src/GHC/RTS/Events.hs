@@ -308,11 +308,11 @@ buildEventInfo spec' =
         CapEnable{cap} ->
           "enabled cap " <> TB.decimal cap
         Message msg ->
-          TB.fromString msg
+          TB.fromText msg
         UserMessage msg ->
-          TB.fromString msg
+          TB.fromText msg
         UserMarker markername ->
-          "marker: " <> TB.fromString markername
+          "marker: " <> TB.fromText markername
         CapsetCreate cs ct ->
           "created capset " <> TB.decimal cs
           <> " of type " <> TB.fromString (show ct)
