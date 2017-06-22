@@ -262,13 +262,13 @@ data EventInfo
 
   -- program/process info
   | RtsIdentifier      { capset :: {-# UNPACK #-}!Capset
-                       , rtsident :: String
+                       , rtsident :: Text
                        }
   | ProgramArgs        { capset :: {-# UNPACK #-}!Capset
-                       , args   :: [String]
+                       , args   :: [Text]
                        }
   | ProgramEnv         { capset :: {-# UNPACK #-}!Capset
-                       , env    :: [String]
+                       , env    :: [Text]
                        }
   | OsProcessPid       { capset :: {-# UNPACK #-}!Capset
                        , pid    :: {-# UNPACK #-}!PID

@@ -332,7 +332,7 @@ buildEventInfo spec' =
           <> TB.decimal nsec <> "ns (unix epoch)"
         RtsIdentifier cs i ->
           "capset " <> TB.decimal cs
-          <> ": RTS version \"" <> TB.fromString i <> "\""
+          <> ": RTS version \"" <> TB.fromText i <> "\""
         ProgramArgs cs args ->
           "capset " <> TB.decimal cs
           <> ": args: " <> TB.fromString (show args)

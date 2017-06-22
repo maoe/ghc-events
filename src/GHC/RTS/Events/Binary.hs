@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 module GHC.RTS.Events.Binary
   ( -- * Readers
     getHeader
@@ -271,21 +272,21 @@ standardParsers = [
  (VariableSizeParser EVENT_PROGRAM_ARGS (do -- (capset, [arg])
       num <- get :: Get Word16
       cs <- get
-      string <- getString (num - sz_capset)
+      string <- getTextLen $ fromIntegral $ num - sz_capset
       return ProgramArgs{ capset = cs
                         , args = splitNull string }
    )),
  (VariableSizeParser EVENT_PROGRAM_ENV (do -- (capset, [arg])
       num <- get :: Get Word16
       cs <- get
-      string <- getString (num - sz_capset)
+      string <- getTextLen $ fromIntegral $ num - sz_capset
       return ProgramEnv{ capset = cs
                        , env = splitNull string }
    )),
  (VariableSizeParser EVENT_RTS_IDENTIFIER (do -- (capset, str)
       num <- get :: Get Word16
       cs <- get
-      string <- getString (num - sz_capset)
+      string <- getTextLen $ fromIntegral $ num - sz_capset
       return RtsIdentifier{ capset = cs
                           , rtsident = string }
    )),
@@ -828,9 +829,6 @@ putCap c = putE (fromIntegral c :: CapNo)
 putMarker :: Word32 -> PutM ()
 putMarker = putE
 
-putEStr :: String -> PutM ()
-putEStr = mapM_ putE
-
 putEventLog :: EventLog -> PutM ()
 putEventLog (EventLog hdr es) = do
     putHeader hdr
@@ -1162,21 +1160,21 @@ putEventSpec (CapsetRemoveCap cs cp) = do
     putCap cp
 
 putEventSpec (RtsIdentifier cs rts) = do
-    putE (fromIntegral (length rts) + sz_capset :: Word16)
+    putE (fromIntegral (T.length rts) + sz_capset :: Word16)
     putE cs
-    putEStr rts
+    put rts
 
 putEventSpec (ProgramArgs cs as) = do
     let as' = unsep as
-    putE (fromIntegral (length as') + sz_capset :: Word16)
+    putE (fromIntegral (T.length as') + sz_capset :: Word16)
     putE cs
-    mapM_ putE as'
+    put as'
 
 putEventSpec (ProgramEnv cs es) = do
     let es' = unsep es
-    putE (fromIntegral (length es') + sz_capset :: Word16)
+    putE (fromIntegral (T.length es') + sz_capset :: Word16)
     putE cs
-    mapM_ putE es'
+    put es'
 
 putEventSpec (OsProcessPid cs pid) = do
     putE cs
@@ -1353,16 +1351,13 @@ putEventSpec HeapProfSampleString {..} = do
     putE heapProfResidency
     putE $ T.unpack heapProfLabel
 
--- [] == []
--- [x] == x\0
--- [x, y, z] == x\0y\0
-unsep :: [String] -> String
-unsep = concatMap (++"\0") -- not the most efficient, but should be ok
+unsep :: [T.Text] -> T.Text
+unsep = T.intercalate "\0"
 
-splitNull :: String -> [String]
-splitNull [] = []
-splitNull xs = case span (/= '\0') xs of
-                (x, xs') -> x : splitNull (drop 1 xs')
+splitNull :: T.Text -> [T.Text]
+splitNull = T.split isNull . T.dropWhileEnd isNull
+  where
+    isNull = (== '\0')
 
 getText :: Get T.Text
 getText = do
