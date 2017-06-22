@@ -300,7 +300,7 @@ standardParsers = [
  (VariableSizeParser EVENT_THREAD_LABEL (do -- (thread, str)
       num <- get :: Get Word16
       tid <- get
-      str <- getString (num - sz_tid)
+      str <- getTextLen $ fromIntegral $ num - sz_tid
       return ThreadLabel{ thread      = tid
                         , threadlabel = str }
     ))
@@ -1056,9 +1056,9 @@ putEventSpec (WakeupThread t c) = do
     putCap c
 
 putEventSpec (ThreadLabel t l) = do
-    putE (fromIntegral (length l) + sz_tid :: Word16)
+    putE (fromIntegral (T.length l) + sz_tid :: Word16)
     putE t
-    putEStr l
+    put l
 
 putEventSpec Shutdown =
     return ()

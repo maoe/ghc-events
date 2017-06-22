@@ -257,7 +257,7 @@ buildEventInfo spec' =
           <> " on cap " <> TB.decimal otherCap
         ThreadLabel thread label ->
           "thread " <> TB.decimal thread
-          <> " has label \"" <> TB.fromString label <> "\""
+          <> " has label \"" <> TB.fromText label <> "\""
         RequestSeqGC ->
           "requesting sequential GC"
         RequestParGC ->

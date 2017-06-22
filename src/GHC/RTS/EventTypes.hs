@@ -172,7 +172,7 @@ data EventInfo
                          otherCap :: {-# UNPACK #-}!Int
                        }
   | ThreadLabel        { thread :: {-# UNPACK #-}!ThreadId,
-                         threadlabel :: String
+                         threadlabel :: Text
                        }
 
   -- par sparks
