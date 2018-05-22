@@ -81,6 +81,7 @@ import Data.List
 import Data.Monoid ((<>))
 import Data.String (IsString)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TB
 import qualified Data.Text.Lazy.Builder.Int as TB
@@ -308,9 +309,9 @@ buildEventInfo spec' =
         CapEnable{cap} ->
           "enabled cap " <> TB.decimal cap
         Message msg ->
-          TB.fromString msg
+          TB.fromText $ TE.decodeUtf8 msg
         UserMessage msg ->
-          TB.fromString msg
+          TB.fromText $ TE.decodeUtf8 msg
         UserMarker markername ->
           "marker: " <> TB.fromString markername
         CapsetCreate cs ct ->

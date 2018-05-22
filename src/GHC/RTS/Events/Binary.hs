@@ -251,12 +251,12 @@ standardParsers = [
 
  (VariableSizeParser EVENT_LOG_MSG (do -- (msg)
       num <- get :: Get Word16
-      string <- getString num
+      string <- G.getByteString $ fromIntegral num
       return Message{ msg = string }
    )),
  (VariableSizeParser EVENT_USER_MSG (do -- (msg)
       num <- get :: Get Word16
-      string <- getString num
+      string <- G.getByteString $ fromIntegral num
       return UserMessage{ msg = string }
    )),
     (VariableSizeParser EVENT_USER_MARKER (do -- (markername)
@@ -1187,12 +1187,12 @@ putEventSpec (WallClockTime cs sec nsec) = do
     putE nsec
 
 putEventSpec (Message s) = do
-    putE (fromIntegral (length s) :: Word16)
-    mapM_ putE s
+    putE (fromIntegral (B.length s) :: Word16)
+    putE s
 
 putEventSpec (UserMessage s) = do
-    putE (fromIntegral (length s) :: Word16)
-    mapM_ putE s
+    putE (fromIntegral (B.length s) :: Word16)
+    putE s
 
 putEventSpec (UserMarker s) = do
     putE (fromIntegral (length s) :: Word16)

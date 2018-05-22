@@ -5,6 +5,7 @@ import Data.Bits
 
 import Data.Binary
 import Data.Text (Text)
+import qualified Data.ByteString as B
 import qualified Data.Vector.Unboxed as VU
 
 -- EventType.
@@ -282,8 +283,8 @@ data EventInfo
                        }
 
   -- messages
-  | Message            { msg :: String }
-  | UserMessage        { msg :: String }
+  | Message            { msg :: B.ByteString }
+  | UserMessage        { msg :: B.ByteString }
   | UserMarker         { markername :: String }
 
   -- Events emitted by a parallel RTS
